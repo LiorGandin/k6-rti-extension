@@ -1,4 +1,4 @@
-module github.com/LiorGandin/k6-rti-extension
+module github.com/LiorGandin/k6-rti-extension/rti
 
 go 1.21.6
 
