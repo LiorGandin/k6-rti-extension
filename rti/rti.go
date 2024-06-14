@@ -23,25 +23,9 @@ func (r *RTIModule) Init(configFilePath, configName string) {
 
 // GetRealTimeData is an example function that retrieves real-time data.
 func (r *RTIModule) GetRealTimeData() string {
-    if r.connector == nil {
-        return "RTI Connector not initialized"
-    }
-
-    // Assuming you have a DataReader for some topic
-    input := r.connector.GetInput("MySubscriber::MyReader")
-    if input == nil {
-        return "Failed to get input"
-    }
-
-    input.Take()
-    samples, _ := input.Samples.ValidDataIterator()
-
-    for sample := range samples {
-        data, _ := sample.GetJSON()
-        return string(data)
-    }
-
-    return "No data available"
+    // Replace with actual RTI logic using r.connector
+    // This is a placeholder example.
+    return "Real-time data"
 }
 
 // Register the RTI module
