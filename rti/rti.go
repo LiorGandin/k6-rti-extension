@@ -3,7 +3,7 @@ package rti
 import (
     "github.com/dop251/goja"
     "go.k6.io/k6/js/modules"
-    "github.com/rticommunity/rticonnextdds-connector-go/pkg/connector"
+    "github.com/rticommunity/rticonnextdds-connector-go"
     "log"
 )
 
