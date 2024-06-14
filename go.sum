@@ -1,0 +1,6 @@
+github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
+github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
+github.com/rticommunity/rticonnextdds-connector-go v0.5.3 h1:LmM9aDDwvyLB5AXw/LxlhD6012rqoJZkV6bqQLcPHrM=
+github.com/rticommunity/rticonnextdds-connector-go v0.5.3/go.mod h1:MNfovH6vHD6+4zOdXNaqRU6ppZXU6SEqSBt4UvDIEnQ=
+go.k6.io/xk6 v0.11.0 h1:RKmnLhk9BT4n34Q6Qb3nALMmPScOKXXAeEtFU2BFE/s=
+go.k6.io/xk6 v0.11.0/go.mod h1:4+BwjriwZ52roJ9RHHQhTBb9Q6ZctEUtsCO10H8rJIo=
