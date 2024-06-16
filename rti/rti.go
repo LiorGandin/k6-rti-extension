@@ -3,7 +3,7 @@ package rti
 import (
     "github.com/dop251/goja"
     "go.k6.io/k6/js/modules"
-    "github.com/rticommunity/rticonnextdds-connector-go"
+    rti "github.com/rticommunity/rticonnextdds-connector-go"
     "log"
 )
 
@@ -15,7 +15,7 @@ type RTIModule struct {
 // Init initializes the RTI module.
 func (r *RTIModule) Init(configFilePath, configName string) {
     var err error
-    r.connector, err = connector.NewConnector(configName, configFilePath)
+    r.connector, err = rti.NewConnector(configName, configFilePath)
     if err != nil {
         log.Fatalf("Failed to create RTI Connector: %v", err)
     }
