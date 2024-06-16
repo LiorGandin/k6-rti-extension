@@ -9,7 +9,7 @@ import (
 
 // RTIModule is the main structure for the RTI module.
 type RTIModule struct {
-    connector *connector.Connector
+    connector *rti.Connector
 }
 
 // Init initializes the RTI module.
@@ -23,9 +23,23 @@ func (r *RTIModule) Init(configFilePath, configName string) {
 
 // GetRealTimeData is an example function that retrieves real-time data.
 func (r *RTIModule) GetRealTimeData() string {
-    // Replace with actual RTI logic using r.connector
-    // This is a placeholder example.
-    return "Real-time data"
+    if r.connector == nil {
+	return "RTI Connector not initialized"
+    }
+
+    input, _ := r.connector.GetInput("mySubscriber::MyReader")
+    if input == nil {
+	return "Failed to get input"
+    }
+
+    input.Take()
+    numOfSamples, _ := input.Samples.GetLength()
+    for i := 0; i<numOfSamples; i++ {
+	data, _ := input.Samples.GetString(i, "color")
+	return string(data)
+    }
+
+    return "No data available"
 }
 
 // Register the RTI module
@@ -35,7 +49,8 @@ func init() {
 
 // Export RTI functions to JavaScript runtime
 func (r *RTIModule) XGetRealTimeData(call goja.FunctionCall) goja.Value {
-    rt := call.Runtime
+    vm := goja.New()
     result := r.GetRealTimeData()
-    return rt.ToValue(result)
+    res, _ := vm.RunString(result)
+    return res
 }
