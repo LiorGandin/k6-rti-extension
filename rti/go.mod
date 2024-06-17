@@ -1,6 +1,6 @@
 module github.com/LiorGandin/k6-rti-extension/rti
 
-go 1.22.4
+go 1.21.6
 
 require (
 	github.com/dop251/goja v0.0.0-20240610225006-393f6d42497b
