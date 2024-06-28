@@ -89,3 +89,9 @@ func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
     r.Init(configFilePath, configName)
     return nil
 }
+
+func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
+    jsonData := call.Argument(0).String()
+    result := r.WriteRealTimeData()
+    return call.Runtime.ToValue(result)
+}
