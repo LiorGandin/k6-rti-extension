@@ -54,3 +54,11 @@ func (r *RTIModule) XGetRealTimeData(call goja.FunctionCall) goja.Value {
     res, _ := vm.RunString(result)
     return res
 }
+
+// Export Init function to JavaScript runtime
+func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
+    configFilePath := call.Argument(0).String()
+    configName := call.Argument(1).String()
+    r.Init(configFilePath, configName)
+    return nil
+}
