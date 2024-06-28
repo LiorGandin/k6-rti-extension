@@ -27,7 +27,7 @@ func (r *RTIModule) GetRealTimeData() string {
 	return "RTI Connector not initialized"
     }
 
-    input, _ := r.connector.GetInput("mySubscriber::MyReader")
+    input, _ := r.connector.GetInput("MySubscriber::MySquareReader")
     if input == nil {
 	return "Failed to get input"
     }
