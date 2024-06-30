@@ -45,27 +45,19 @@ func (r *RTIModule) GetRealTimeData() string {
 
 // WriteRealTimeData writes data to the DataWriter.
 func (r *RTIModule) WriteRealTimeData(jsonData string) string {
-	log.Println(jsonData)
     if r.connector == nil {
         return "RTI Connector not initialized"
     }
 
-    output, _ := r.connector.GetOutput("MyPublisher::MySquareWriter")
+    output := r.connector.GetOutput("MyPublisher::MyWriter")
     if output == nil {
         return "Failed to get output"
     }
 
-    for i := 0; i < 10; i++ {
-	    output.Instance.SetInt("x", i)
-	    output.Instance.SetInt("y", i*2)
-	    output.Instance.SetInt("shapesize", 30)
-	    output.Instance.SetString("color", "BLUE")
-	    err := output.Write()
-	    if err != nil {
-		return "Failed to write data: " + err.Error()
-	    }
-	    log.Println("Writing...")
-	    time.Sleep(time.Second * 1)
+    output.Instance.SetJSON(jsonData)
+    err := output.Write()
+    if err != nil {
+        return "Failed to write data: " + err.Error()
     }
 
     return "Data written successfully"
