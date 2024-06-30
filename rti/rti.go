@@ -49,7 +49,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
         return "RTI Connector not initialized"
     }
 
-    output := r.connector.GetOutput("MyPublisher::MyWriter")
+    output := r.connector.GetOutput("MyPublisher::MySquareWriter")
     if output == nil {
         return "Failed to get output"
     }
