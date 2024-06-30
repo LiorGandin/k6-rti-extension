@@ -5,7 +5,6 @@ import (
     "go.k6.io/k6/js/modules"
     rtiGo "github.com/rticommunity/rticonnextdds-connector-go"
     "log"
-	"time"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -36,8 +35,15 @@ func (r *RTIModule) GetRealTimeData() string {
     input.Take()
     numOfSamples, _ := input.Samples.GetLength()
     for i := 0; i<numOfSamples; i++ {
-	data, _ := input.Samples.GetJSON()
-	return string(data)
+	valid, _ := input.Infos.IsValid(i)
+	if valid {
+		json, err := input.Samples.GetJSON(i)
+		if err != nil {
+			log.Println(err)
+		} else {
+			return string(data)
+		}
+	}
     }
 
     return "No data available"
@@ -49,7 +55,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
         return "RTI Connector not initialized"
     }
 
-    output := r.connector.GetOutput("MyPublisher::MySquareWriter")
+    output, _ := r.connector.GetOutput("MyPublisher::MySquareWriter")
     if output == nil {
         return "Failed to get output"
     }
