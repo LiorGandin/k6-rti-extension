@@ -37,7 +37,7 @@ func (r *RTIModule) GetRealTimeData() string {
     for i := 0; i<numOfSamples; i++ {
 	valid, _ := input.Infos.IsValid(i)
 	if valid {
-		json, err := input.Samples.GetJSON(i)
+		data, err := input.Samples.GetJSON(i)
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -50,7 +50,7 @@ func (r *RTIModule) GetRealTimeData() string {
 }
 
 // WriteRealTimeData writes data to the DataWriter.
-func (r *RTIModule) WriteRealTimeData(jsonData string) string {
+func (r *RTIModule) WriteRealTimeData(jsonData []byte) string {
     if r.connector == nil {
         return "RTI Connector not initialized"
     }
@@ -93,7 +93,7 @@ func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
 func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
-    result := r.WriteRealTimeData(jsonData)
-    res, _ = vm.RunString(result)
+    result := r.WriteRealTimeData([]byte(jsonData))
+    res, _ := vm.RunString(result)
     return res
 }
