@@ -36,7 +36,7 @@ func (r *RTIModule) GetRealTimeData() string {
     input.Take()
     numOfSamples, _ := input.Samples.GetLength()
     for i := 0; i<numOfSamples; i++ {
-	data, _ := input.Samples.GetString(i, "color")
+	data, _ := input.Samples.GetJSON()
 	return string(data)
     }
 
