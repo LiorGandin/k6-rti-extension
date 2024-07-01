@@ -51,7 +51,7 @@ func (r *RTIModule) GetRealTimeData() string {
 }
 
 // WriteRealTimeData writes data to the DataWriter.
-func (r *RTIModule) WriteRealTimeData(jsonData string) string {
+func (r *RTIModule) WriteRealTimeData(jsonData map[string]interface{}) string {
     if r.connector == nil {
         return "RTI Connector not initialized"
     }
@@ -96,7 +96,8 @@ func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
 func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
-    result := r.WriteRealTimeData(jsonData)
-    res, _ := vm.RunString(result)
+    var result map[string]interface{}
+    err := json.Unmarshal([]byte(jsonData), &result)
+    res, _ := vm.RunString(r.WriteRealTimeData(result))
     return res
 }
