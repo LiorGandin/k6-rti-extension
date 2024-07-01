@@ -27,11 +27,11 @@ func (r *RTIModule) GetRealTimeData() string {
 	return "RTI Connector not initialized"
     }
 
-    input, _ := r.connector.GetInput("MySubscriber::MySquareReader")
+    input, _ := r.connector.GetInput("MySubscriber::MyReader")
     if input == nil {
 	return "Failed to get input"
     }
-
+    r.connector.Wait(-1)
     input.Take()
     numOfSamples, _ := input.Samples.GetLength()
     for i := 0; i<numOfSamples; i++ {
@@ -55,7 +55,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData []byte) string {
         return "RTI Connector not initialized"
     }
 
-    output, _ := r.connector.GetOutput("MyPublisher::MySquareWriter")
+    output, _ := r.connector.GetOutput("MyPublisher::MyWriter")
     if output == nil {
         return "Failed to get output"
     }
