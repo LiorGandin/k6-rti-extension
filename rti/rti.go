@@ -98,6 +98,9 @@ func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     jsonData := call.Argument(0).String()
     var result map[string]interface{}
     err := json.Unmarshal([]byte(jsonData), &result)
+    if err != nil {
+        log.Fatal(err)
+    }
     res, _ := vm.RunString(r.WriteRealTimeData(result))
     return res
 }
