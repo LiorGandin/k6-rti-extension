@@ -5,7 +5,7 @@ import (
     "go.k6.io/k6/js/modules"
     rtiGo "github.com/rticommunity/rticonnextdds-connector-go"
     "log"
-    "unsafe"
+	"encoding/json"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -51,7 +51,7 @@ func (r *RTIModule) GetRealTimeData() string {
 }
 
 // WriteRealTimeData writes data to the DataWriter.
-func (r *RTIModule) WriteRealTimeData(jsonData []byte) string {
+func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     if r.connector == nil {
         return "RTI Connector not initialized"
     }
@@ -61,13 +61,16 @@ func (r *RTIModule) WriteRealTimeData(jsonData []byte) string {
         return "Failed to get output"
     }
 
-    output.Instance.SetJSON(jsonData)
+	data, err := json.Marshal(jsonData)
+    output.Instance.SetJSON(data)
     err := output.Write()
     if err != nil {
         return "Failed to write data: " + err.Error()
     }
-
-    return string(unsafe.Sizeof(jsonData))
+	
+	byteCount := len(data)
+	
+	return string(byteCount)
 }
 
 // Register the RTI module
@@ -94,7 +97,7 @@ func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
 func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
-    result := r.WriteRealTimeData([]byte(jsonData))
+    result := r.WriteRealTimeData(jsonData)
     res, _ := vm.RunString(result)
     return res
 }
