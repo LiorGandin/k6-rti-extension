@@ -61,7 +61,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
         return "Failed to get output"
     }
 
-    data, err := json.Marshal(jsonData)
+    data, _ := json.Marshal(jsonData)
     output.Instance.SetJSON(data)
     err := output.Write()
     if err != nil {
