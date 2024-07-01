@@ -5,7 +5,7 @@ import (
     "go.k6.io/k6/js/modules"
     rtiGo "github.com/rticommunity/rticonnextdds-connector-go"
     "log"
-	"encoding/json"
+    "encoding/json"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -61,16 +61,15 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
         return "Failed to get output"
     }
 
-	data, err := json.Marshal(jsonData)
+    data, err := json.Marshal(jsonData)
     output.Instance.SetJSON(data)
     err := output.Write()
     if err != nil {
         return "Failed to write data: " + err.Error()
     }
 	
-	byteCount := len(data)
-	
-	return string(byteCount)
+    byteCount := len(data)
+    return string(byteCount)
 }
 
 // Register the RTI module
