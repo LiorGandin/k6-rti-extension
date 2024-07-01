@@ -51,26 +51,23 @@ func (r *RTIModule) GetRealTimeData() string {
 }
 
 // WriteRealTimeData writes data to the DataWriter.
-func (r *RTIModule) WriteRealTimeData(jsonData []byte) uintptr {
+func (r *RTIModule) WriteRealTimeData(jsonData []byte) string {
     if r.connector == nil {
-	log.Println("RTI Connector not initialized")
-        return 0
+        return "RTI Connector not initialized"
     }
 
     output, _ := r.connector.GetOutput("MyPublisher::MyWriter")
     if output == nil {
-	log.Println("Failed to get output")
-        return 0
+        return "Failed to get output"
     }
 
     output.Instance.SetJSON(jsonData)
     err := output.Write()
     if err != nil {
-	log.Println("Failed to write data: " + err.Error())
-        return 0
+        return "Failed to write data: " + err.Error()
     }
 
-    return unsafe.Sizeof(jsonData)
+    return String(unsafe.Sizeof(jsonData))
 }
 
 // Register the RTI module
@@ -98,6 +95,6 @@ func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
     result := r.WriteRealTimeData([]byte(jsonData))
-    res := vm.ToValue(result)
+    res, _ := vm.RunString(result)
     return res
 }
