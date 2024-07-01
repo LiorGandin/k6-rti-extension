@@ -67,7 +67,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData []byte) string {
         return "Failed to write data: " + err.Error()
     }
 
-    return String(unsafe.Sizeof(jsonData))
+    return string(unsafe.Sizeof(jsonData))
 }
 
 // Register the RTI module
