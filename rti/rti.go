@@ -102,9 +102,6 @@ func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
 func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
-    if err != nil {
-        log.Fatal(err)
-    }
     res, _ := vm.RunString(r.WriteRealTimeData(jsonData))
     return res
 }
