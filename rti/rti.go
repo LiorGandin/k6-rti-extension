@@ -41,7 +41,7 @@ func (r *RTIModule) GetRealTimeData() string {
 	if valid {
 		data, err := input.Samples.GetJSON(i)
 		if err != nil {
-			log.Println(err)
+			return err.Eror()
 		} else {
 			return string(data)
 		}
