@@ -7,6 +7,7 @@ import (
     "log"
     "encoding/json"
 	"strconv"
+	"time"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -79,6 +80,40 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     return strconv.Itoa(byteCount)
 }
 
+// WriteRealTimeDataByRate writes data to the DataWriter by rate.
+func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int) string {
+    if r.connector == nil {
+        return "RTI Connector not initialized"
+    }
+
+    output, _ := r.connector.GetOutput("MyPublisher::MyWriter")
+    if output == nil {
+        return "Failed to get output"
+    }
+
+    var result map[string]interface{}
+    marshalErr := json.Unmarshal([]byte(jsonData), &result)
+    if marshalErr != nil {
+		return "Failed to UnMarshal data: " + marshalErr.Error()
+    }
+    data, _ := json.Marshal(result)
+	
+	for i := 0; i<len(data); i+=size*rate {
+		for j := 0; j<size; j++ {
+			if i + j > len(data) {
+				return "All Data Has Been Written Successfully"
+			}
+			output.Instance.SetByte("b", data[i+j])
+			err := output.Write()
+			if err != nil {
+				return "Failed to write data: " + err.Error()
+			}
+			time.Sleep((rate/size)*time.Second)
+		}
+	}
+	
+    return "All Data Has Been Written Successfully"
+}
 // Register the RTI module
 func init() {
     modules.Register("k6/x/rti", new(RTIModule))
@@ -104,5 +139,14 @@ func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
     res, _ := vm.RunString(r.WriteRealTimeData(jsonData))
+    return res
+}
+
+func (r *RTIModule) XWriteRealTimeDataByRate(call goja.FunctionCall) goja.Value {
+    vm := goja.New()
+    jsonData := call.Argument(0).String()
+	rate := call.Argument(1).String()
+	size := call.Argument(2).String()
+    res, _ := vm.RunString(r.WriteRealTimeDataByRate(jsonData, rate, size))
     return res
 }
