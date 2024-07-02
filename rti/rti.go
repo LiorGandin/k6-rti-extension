@@ -6,6 +6,7 @@ import (
     rtiGo "github.com/rticommunity/rticonnextdds-connector-go"
     "log"
     "encoding/json"
+	"strconv"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -75,7 +76,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     }
 	
     byteCount := len(data)
-    return string(byteCount)
+    return strconv.Itoa(byteCount)
 }
 
 // Register the RTI module
