@@ -8,6 +8,7 @@ import (
     "encoding/json"
 	"strconv"
 	"time"
+	"math"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -42,7 +43,7 @@ func (r *RTIModule) GetRealTimeData() string {
 	if valid {
 		data, err := input.Samples.GetJSON(i)
 		if err != nil {
-			return err.Eror()
+			return err.Error()
 		} else {
 			return string(data)
 		}
@@ -108,7 +109,7 @@ func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int)
 			if err != nil {
 				return "Failed to write data: " + err.Error()
 			}
-			time.Sleep((rate/size)*time.Second)
+			time.Sleep(math.Round((rate/size)*1000)*time.Millisecond)
 		}
 	}
 	
@@ -145,8 +146,8 @@ func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
 func (r *RTIModule) XWriteRealTimeDataByRate(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
-	rate := call.Argument(1).String()
-	size := call.Argument(2).String()
-    res, _ := vm.RunString(r.WriteRealTimeDataByRate(jsonData, rate, size))
+	rate := call.Argument(1).ToInteger()
+	size := call.Argument(2).ToInteger()
+    res, _ := vm.RunString(r.WriteRealTimeDataByRate(jsonData, int(rate), int(size)))
     return res
 }
