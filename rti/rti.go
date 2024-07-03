@@ -52,6 +52,41 @@ func (r *RTIModule) GetRealTimeData() string {
     return "No data available"
 }
 
+// GetRealTimeFracturedData is an example function that retrieves real-time data.
+func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) string {
+    if r.connector == nil {
+	return "RTI Connector not initialized"
+    }
+
+    input, _ := r.connector.GetInput("MySubscriber::MyReader")
+    if input == nil {
+	return "Failed to get input"
+    }
+	bytesRecieved := 0
+	var data []byte
+	var receivedByte byte
+	var err error
+	for {
+		r.connector.Wait(-1)
+		input.Take()
+		if isDurableOrReliable {
+			receivedByte, err = input.Samples.GetByte(bytesRecieved, "b")
+		} else {
+			receivedByte, err = input.Samples.GetByte(0, "b")
+		}
+		bytesRecieved++
+		if err != nil {
+			return err.Error()
+		}
+		data = append(data, []byte{receivedByte}...)
+		if bytesRecieved == messageLength {
+			break
+		}
+	}
+
+    return string(data)
+}
+
 // WriteRealTimeData writes data to the DataWriter.
 func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     if r.connector == nil {
@@ -123,6 +158,15 @@ func init() {
 func (r *RTIModule) XGetRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     result := r.GetRealTimeData()
+    res, _ := vm.RunString(result)
+    return res
+}
+
+func (r *RTIModule) XGetRealTimeFracturedData(call goja.FunctionCall) goja.Value {
+    vm := goja.New()
+	messageLength := call.Argument(0).ToInteger()
+	isDurableOrReliable := call.Argument(0).ToBoolean()
+    result := r.GetRealTimeFracturedData(int(messageLength), isDurableOrReliable)
     res, _ := vm.RunString(result)
     return res
 }
