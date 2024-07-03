@@ -53,38 +53,42 @@ func (r *RTIModule) GetRealTimeData() string {
 }
 
 // GetRealTimeFracturedData is an example function that retrieves real-time data.
-func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) string {
+func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) []byte {
     if r.connector == nil {
-	return "RTI Connector not initialized"
+		return nil
     }
 
     input, _ := r.connector.GetInput("MySubscriber::MyReader")
     if input == nil {
-	return "Failed to get input"
+		return nil
     }
 	bytesRecieved := 0
 	var data []byte
 	var receivedByte byte
 	var err error
-	for {
-		r.connector.Wait(-1)
-		input.Take()
-		if isDurableOrReliable {
-			receivedByte, err = input.Samples.GetByte(bytesRecieved, "b")
-		} else {
-			receivedByte, err = input.Samples.GetByte(0, "b")
+	r.connector.Wait(-1)
+	input.Take()
+	numOfSamples, _ := input.Samples.GetLength()
+    for i := 0; i < numOfSamples; i++ {
+		valid, _ := input.Infos.IsValid(i)
+		if valid {
+			if isDurableOrReliable {
+				receivedByte, err = input.Samples.GetByte(bytesRecieved, "b")
+			} else {
+				receivedByte, err = input.Samples.GetByte(0, "b")
+			}
+			bytesRecieved++
+			if err != nil {
+				return nil
+			}
+			data = append(data, []byte{receivedByte}...)
 		}
-		bytesRecieved++
-		if err != nil {
-			return err.Error()
-		}
-		data = append(data, []byte{receivedByte}...)
 		if bytesRecieved == messageLength {
-			break
+			return data
 		}
 	}
 
-    return string(data)
+    return nil
 }
 
 // WriteRealTimeData writes data to the DataWriter.
