@@ -6,8 +6,8 @@ import (
     rtiGo "github.com/rticommunity/rticonnextdds-connector-go"
     "log"
     "encoding/json"
-	"strconv"
-	"time"
+    "strconv"
+    "time"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -54,14 +54,14 @@ func (r *RTIModule) GetRealTimeData() string {
 
 // GetRealTimeFracturedData is an example function that retrieves real-time data.
 func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) []byte {
-    if r.connector == nil {
+	if r.connector == nil {
 		return nil
-    }
-
-    input, _ := r.connector.GetInput("MySubscriber::MyReader")
-    if input == nil {
+	}
+	
+    	input, _ := r.connector.GetInput("MySubscriber::MyReader")
+	if input == nil {
 		return nil
-    }
+	}
 	bytesRecieved := 0
 	var data []byte
 	var receivedByte byte
@@ -69,7 +69,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 	r.connector.Wait(-1)
 	input.Take()
 	numOfSamples, _ := input.Samples.GetLength()
-    for i := 0; i < numOfSamples; i++ {
+	for i := 0; i < numOfSamples; i++ {
 		valid, _ := input.Infos.IsValid(i)
 		if valid {
 			if isDurableOrReliable {
@@ -87,8 +87,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 			return data
 		}
 	}
-
-    return nil
+	return nil
 }
 
 // WriteRealTimeData writes data to the DataWriter.
