@@ -8,7 +8,6 @@ import (
     "encoding/json"
 	"strconv"
 	"time"
-	"math"
 )
 
 // RTIModule is the main structure for the RTI module.
@@ -109,7 +108,7 @@ func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int)
 			if err != nil {
 				return "Failed to write data: " + err.Error()
 			}
-			time.Sleep(math.Round((rate/size)*1000)*time.Millisecond)
+			time.Sleep(time.Duration(rate/size)*time.Second)
 		}
 	}
 	
