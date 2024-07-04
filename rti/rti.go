@@ -132,26 +132,26 @@ func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int)
     var result map[string]interface{}
     marshalErr := json.Unmarshal([]byte(jsonData), &result)
     if marshalErr != nil {
-		return "Failed to UnMarshal data: " + marshalErr.Error()
+	return "Failed to UnMarshal data: " + marshalErr.Error()
     }
     data, _ := json.Marshal(result)
 	
-	for i := 0; i<len(data); i+=size*rate {
-		for j := 0; j<size; j++ {
-			if i + j > len(data) {
-				return "All Data Has Been Written Successfully"
-			}
-			output.Instance.SetByte("b", data[i+j])
-			err := output.Write()
-			if err != nil {
-				return "Failed to write data: " + err.Error()
-			}
-			time.Sleep(time.Duration(rate/size)*time.Second)
-		}
+    for i := 0; i<len(data); i+=size*rate {
+	for j := 0; j<size; j++ {
+	    if i + j > len(data) {
+		return "All Data Has Been Written Successfully"
+	    }
+	    output.Instance.SetByte("b", data[i+j])
+	    err := output.Write()
+	    if err != nil {
+		return "Failed to write data: " + err.Error()
+	    }
+	    time.Sleep(time.Duration(rate/size)*time.Second)
 	}
-	
+     }
     return "All Data Has Been Written Successfully"
 }
+
 // Register the RTI module
 func init() {
     modules.Register("k6/x/rti", new(RTIModule))
@@ -167,8 +167,8 @@ func (r *RTIModule) XGetRealTimeData(call goja.FunctionCall) goja.Value {
 
 func (r *RTIModule) XGetRealTimeFracturedData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
-	messageLength := call.Argument(0).ToInteger()
-	isDurableOrReliable := call.Argument(0).ToBoolean()
+    messageLength := call.Argument(0).ToInteger()
+    isDurableOrReliable := call.Argument(0).ToBoolean()
     result := string(r.GetRealTimeFracturedData(int(messageLength), isDurableOrReliable))
     res, _ := vm.RunString(result)
     return res
@@ -192,8 +192,8 @@ func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
 func (r *RTIModule) XWriteRealTimeDataByRate(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
-	rate := call.Argument(1).ToInteger()
-	size := call.Argument(2).ToInteger()
+    rate := call.Argument(1).ToInteger()
+    size := call.Argument(2).ToInteger()
     res, _ := vm.RunString(r.WriteRealTimeDataByRate(jsonData, int(rate), int(size)))
     return res
 }
