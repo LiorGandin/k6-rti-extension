@@ -8,20 +8,33 @@ import (
     "encoding/json"
     "strconv"
     "time"
+	"sync"
 )
 
 // RTIModule is the main structure for the RTI module.
 type RTIModule struct {
     connector *rtiGo.Connector
+	mu sync.Mutex
+	wg sync.WaitGroup
+	numUsers int
 }
 
 // Init initializes the RTI module.
-func (r *RTIModule) Init(configFilePath, configName string) {
+func (r *RTIModule) Init(configFilePath, configName string, numGoroutines int) {
     var err error
     r.connector, err = rtiGo.NewConnector(configName, configFilePath)
+	
+	// Adding the number of goroutines to the WaitGroup
+	r.numUsers = numGoroutines
+    r.wg.Add(numGoroutines)
+	
     if err != nil {
         log.Fatalf("Failed to create RTI Connector: %v", err)
     }
+}
+
+func (r *RTIModule) ReloadUsers() {
+	r.wg.Add(r.numUsers)
 }
 
 // GetRealTimeData is an example function that retrieves real-time data.
@@ -92,6 +105,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 
 // WriteRealTimeData writes data to the DataWriter.
 func (r *RTIModule) WriteRealTimeData(jsonData string) string {
+    r.mu.Lock()
     if r.connector == nil {
         return "RTI Connector not initialized"
     }
@@ -104,6 +118,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     var result map[string]interface{}
     marshalErr := json.Unmarshal([]byte(jsonData), &result)
     if marshalErr != nil {
+	defer r.mu.Unlock()
 	return "Failed to UnMarshal data: " + marshalErr.Error()
     }
     data, _ := json.Marshal(result)
@@ -111,9 +126,10 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     output.Instance.SetJSON(data)
     err := output.Write()
     if err != nil {
+		defer r.mu.Unlock()
         return "Failed to write data: " + err.Error()
     }
-	
+	defer r.mu.Unlock()
     byteCount := len(data)
     return strconv.Itoa(byteCount)
 }
@@ -178,14 +194,22 @@ func (r *RTIModule) XGetRealTimeFracturedData(call goja.FunctionCall) goja.Value
 func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
     configFilePath := call.Argument(0).String()
     configName := call.Argument(1).String()
-    r.Init(configFilePath, configName)
+    numGoroutines := call.Argument(2).ToInteger()
+    r.Init(configFilePath, configName, int(numGoroutines))
     return nil
+}
+
+func (r *RTIModule) XReloadUsers(call goja.FunctionCall) goja.Value {
+	r.ReloadUsers()
+	return nil
 }
 
 func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
     res, _ := vm.RunString(r.WriteRealTimeData(jsonData))
+	r.wg.Done()
+	r.wg.Wait()
     return res
 }
 
