@@ -8,15 +8,15 @@ import (
     "encoding/json"
     "strconv"
     "time"
-	"sync"
+    "sync"
 )
 
 // RTIModule is the main structure for the RTI module.
 type RTIModule struct {
     connector *rtiGo.Connector
-	mu sync.Mutex
-	wg sync.WaitGroup
-	numUsers int
+    mu sync.Mutex
+    wg sync.WaitGroup
+    numUsers int
 }
 
 // Init initializes the RTI module.
@@ -24,8 +24,8 @@ func (r *RTIModule) Init(configFilePath, configName string, numGoroutines int) {
     var err error
     r.connector, err = rtiGo.NewConnector(configName, configFilePath)
 	
-	// Adding the number of goroutines to the WaitGroup
-	r.numUsers = numGoroutines
+    // Adding the number of goroutines to the WaitGroup
+    r.numUsers = numGoroutines
     r.wg.Add(numGoroutines)
 	
     if err != nil {
@@ -126,10 +126,10 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     output.Instance.SetJSON(data)
     err := output.Write()
     if err != nil {
-		defer r.mu.Unlock()
+	defer r.mu.Unlock()
         return "Failed to write data: " + err.Error()
     }
-	defer r.mu.Unlock()
+    defer r.mu.Unlock()
     byteCount := len(data)
     return strconv.Itoa(byteCount)
 }
@@ -200,16 +200,16 @@ func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
 }
 
 func (r *RTIModule) XReloadUsers(call goja.FunctionCall) goja.Value {
-	r.ReloadUsers()
-	return nil
+    r.ReloadUsers()
+    return nil
 }
 
 func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
     res, _ := vm.RunString(r.WriteRealTimeData(jsonData))
-	r.wg.Done()
-	r.wg.Wait()
+    r.wg.Done()
+    r.wg.Wait()
     return res
 }
 
