@@ -47,7 +47,7 @@ func (r *RTIModule) GetRealTimeData() string {
 	defer r.muReaders.Unlock()
 	return "Failed to get input"
     }
-    r.connector.Wait(-1)
+    r.connector.Wait(3000)
     input.Take()
     numOfSamples, _ := input.Samples.GetLength()
     for i := 0; i<numOfSamples; i++ {
@@ -84,7 +84,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 	var data []byte
 	var receivedByte byte
 	var err error
-	r.connector.Wait(-1)
+	r.connector.Wait(3000)
 	input.Take()
 	numOfSamples, _ := input.Samples.GetLength()
 	for i := 0; i < numOfSamples; i++ {
