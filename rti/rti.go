@@ -16,8 +16,8 @@ type RTIModule struct {
     connector *rtiGo.Connector
     muWriters sync.Mutex
     muReaders sync.Mutex
-    wgWriters sync.WaitGroup
-    wgReaders sync.WaitGroup
+	numWriters int
+	numReaders int 
 }
 
 // Init initializes the RTI module.
@@ -25,9 +25,8 @@ func (r *RTIModule) Init(configFilePath, configName string, numGoroutinesWriters
     var err error
     r.connector, err = rtiGo.NewConnector(configName, configFilePath)
 	
-    // Adding the number of goroutines to the WaitGroup
-    r.wgWriters.Add(numGoroutinesWriters)
-    r.wgReaders.Add(numGoroutinesReaders)
+	r.numWriters = numGoroutinesWriters
+	r.numReaders = numGoroutinesReaders
 	
     if err != nil {
         log.Fatalf("Failed to create RTI Connector: %v", err)
@@ -37,17 +36,16 @@ func (r *RTIModule) Init(configFilePath, configName string, numGoroutinesWriters
 // GetRealTimeData is an example function that retrieves real-time data.
 func (r *RTIModule) GetRealTimeData() string {
     r.muReaders.Lock()
+	defer r.muReaders.Unlock()
     if r.connector == nil {
-        defer r.muReaders.Unlock()
 	return "RTI Connector not initialized"
     }
 
     input, _ := r.connector.GetInput("MySubscriber::MyReader")
     if input == nil {
-	defer r.muReaders.Unlock()
 	return "Failed to get input"
     }
-    r.connector.Wait(-1)
+    r.connector.Wait(3000)
     input.Take()
     numOfSamples, _ := input.Samples.GetLength()
     for i := 0; i<numOfSamples; i++ {
@@ -55,36 +53,32 @@ func (r *RTIModule) GetRealTimeData() string {
 	if valid {
 		data, err := input.Samples.GetJSON(i)
 		if err != nil {
-		    defer r.muReaders.Unlock()
 		    return err.Error()
 		} else {
-		    defer r.muReaders.Unlock()
 		    return string(data)
 		}
 	}
     }
-    defer r.muReaders.Unlock()
     return "No data available"
 }
 
 // GetRealTimeFracturedData is an example function that retrieves real-time data.
 func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) []byte {
     r.muReaders.Lock()
+	defer r.muReaders.Unlock()
 	if r.connector == nil {
-	    defer r.muReaders.Unlock()
 	    return []byte("RTI Connector not initialized")
 	}
 	
     	input, _ := r.connector.GetInput("MySubscriber::MyReader")
 	if input == nil {
-	    defer r.muReaders.Unlock()
 	    return []byte("Failed to get input")
 	}
 	bytesRecieved := 0
 	var data []byte
 	var receivedByte byte
 	var err error
-	r.connector.Wait(-1)
+	r.connector.Wait(300)
 	input.Take()
 	numOfSamples, _ := input.Samples.GetLength()
 	for i := 0; i < numOfSamples; i++ {
@@ -97,38 +91,33 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 			}
 			bytesRecieved++
 			if err != nil {
-			    defer r.muReaders.Unlock()
 			    return []byte(err.Error())
 			}
 			data = append(data, []byte{receivedByte}...)
 		}
 		if bytesRecieved == messageLength {
-		    defer r.muReaders.Unlock()
 		    return data
 		}
 	}
-	defer r.muReaders.Unlock()
 	return []byte("Was unable to get data in it's entirety")
 }
 
 // WriteRealTimeData writes data to the DataWriter.
 func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     r.muWriters.Lock()
-    if r.connector == nil {
 	defer r.muWriters.Unlock()
+    if r.connector == nil {
         return "RTI Connector not initialized"
     }
 
     output, _ := r.connector.GetOutput("MyPublisher::MyWriter")
     if output == nil {
-	defer r.muWriters.Unlock()
         return "Failed to get output"
     }
 
     var result map[string]interface{}
     marshalErr := json.Unmarshal([]byte(jsonData), &result)
     if marshalErr != nil {
-	defer r.muWriters.Unlock()
 	return "Failed to UnMarshal data: " + marshalErr.Error()
     }
     data, _ := json.Marshal(result)
@@ -136,10 +125,8 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     output.Instance.SetJSON(data)
     err := output.Write()
     if err != nil {
-	defer r.muWriters.Unlock()
         return "Failed to write data: " + err.Error()
     }
-    defer r.muWriters.Unlock()
     byteCount := len(data)
     return strconv.Itoa(byteCount)
 }
@@ -147,21 +134,19 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
 // WriteRealTimeDataByRate writes data to the DataWriter by rate.
 func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int) string {
     r.muWriters.Lock()
-    if r.connector == nil {
 	defer r.muWriters.Unlock()
+    if r.connector == nil {
         return "RTI Connector not initialized"
     }
 
     output, _ := r.connector.GetOutput("MyPublisher::MyWriter")
     if output == nil {
-	defer r.muWriters.Unlock()
         return "Failed to get output"
     }
 
     var result map[string]interface{}
     marshalErr := json.Unmarshal([]byte(jsonData), &result)
     if marshalErr != nil {
-	defer r.muWriters.Unlock()
 	return "Failed to UnMarshal data: " + marshalErr.Error()
     }
     data, _ := json.Marshal(result)
@@ -169,19 +154,16 @@ func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int)
     for i := 0; i<len(data); i+=size*rate {
 	for j := 0; j<size; j++ {
 	    if i + j > len(data) {
-		defer r.muWriters.Unlock()
 		return "All Data Has Been Written Successfully"
 	    }
 	    output.Instance.SetByte("b", data[i+j])
 	    err := output.Write()
 	    if err != nil {
-		defer r.muWriters.Unlock()
 		return "Failed to write data: " + err.Error()
 	    }
 	    time.Sleep(time.Duration(rate/size)*time.Second)
 	}
      }
-    defer r.muWriters.Unlock()
     return "All Data Has Been Written Successfully"
 }
 
@@ -194,8 +176,6 @@ func init() {
 func (r *RTIModule) XGetRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     result := r.GetRealTimeData()
-    r.wgReaders.Done()
-    r.wgReaders.Wait()
     res, _ := vm.RunString(result)
     return res
 }
@@ -205,8 +185,6 @@ func (r *RTIModule) XGetRealTimeFracturedData(call goja.FunctionCall) goja.Value
     messageLength := call.Argument(0).ToInteger()
     isDurableOrReliable := call.Argument(0).ToBoolean()
     result := string(r.GetRealTimeFracturedData(int(messageLength), isDurableOrReliable))
-    r.wgReaders.Done()
-    r.wgReaders.Wait()
     res, _ := vm.RunString(result)
     return res
 }
@@ -225,8 +203,6 @@ func (r *RTIModule) XWriteRealTimeData(call goja.FunctionCall) goja.Value {
     vm := goja.New()
     jsonData := call.Argument(0).String()
     res, _ := vm.RunString(r.WriteRealTimeData(jsonData))
-    r.wgWriters.Done()
-    r.wgWriters.Wait()
     return res
 }
 
@@ -236,7 +212,5 @@ func (r *RTIModule) XWriteRealTimeDataByRate(call goja.FunctionCall) goja.Value 
     rate := call.Argument(1).ToInteger()
     size := call.Argument(2).ToInteger()
     res, _ := vm.RunString(r.WriteRealTimeDataByRate(jsonData, int(rate), int(size)))
-    r.wgWriters.Done()
-    r.wgWriters.Wait()
     return res
 }
