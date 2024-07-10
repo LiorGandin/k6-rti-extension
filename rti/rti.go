@@ -78,7 +78,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 	var data []byte
 	var receivedByte byte
 	var err error
-	r.connector.Wait(300)
+	r.connector.Wait(3000)
 	input.Take()
 	numOfSamples, _ := input.Samples.GetLength()
 	for i := 0; i < numOfSamples; i++ {
