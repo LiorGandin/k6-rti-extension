@@ -14,7 +14,7 @@ import (
 // RTIModule is the main structure for the RTI module.
 type RTIModule struct {
     readerConnector *rtiGo.Connector
-	writerConnector *rtiGo.Connector
+    writerConnector *rtiGo.Connector
     muWriters sync.Mutex
     muReaders sync.Mutex
 }
@@ -28,9 +28,9 @@ func (r *RTIModule) Init(configFilePath, configName string) {
         log.Fatalf("Failed to create RTI Connector: %v", err)
     }
 	
-	r.writerConnector, err = rtiGo.NewConnector(configName, configFilePath)
+    r.writerConnector, err = rtiGo.NewConnector(configName, configFilePath)
 	
-	if err != nil {
+    if err != nil {
         log.Fatalf("Failed to create RTI Connector: %v", err)
     }
 }
@@ -38,7 +38,8 @@ func (r *RTIModule) Init(configFilePath, configName string) {
 // GetRealTimeData is an example function that retrieves real-time data.
 func (r *RTIModule) GetRealTimeData() string {
     r.muReaders.Lock()
-	defer r.muReaders.Unlock()
+    defer r.muReaders.Unlock()
+
     if r.readerConnector == nil {
 	return "RTI Connector not initialized"
     }
@@ -66,7 +67,7 @@ func (r *RTIModule) GetRealTimeData() string {
 
 // GetRealTimeFracturedData is an example function that retrieves real-time data.
 func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) []byte {
-    r.muReaders.Lock()
+        r.muReaders.Lock()
 	defer r.muReaders.Unlock()
 	if r.readerConnector == nil {
 	    return []byte("RTI Connector not initialized")
@@ -107,7 +108,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 // WriteRealTimeData writes data to the DataWriter.
 func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     r.muWriters.Lock()
-	defer r.muWriters.Unlock()
+    defer r.muWriters.Unlock()
     if r.writerConnector == nil {
         return "RTI Connector not initialized"
     }
@@ -136,7 +137,7 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
 // WriteRealTimeDataByRate writes data to the DataWriter by rate.
 func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int) string {
     r.muWriters.Lock()
-	defer r.muWriters.Unlock()
+    defer r.muWriters.Unlock()
     if r.writerConnector == nil {
         return "RTI Connector not initialized"
     }
