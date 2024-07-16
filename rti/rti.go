@@ -13,22 +13,24 @@ import (
 
 // RTIModule is the main structure for the RTI module.
 type RTIModule struct {
-    connector *rtiGo.Connector
+    readerConnector *rtiGo.Connector
+	writerConnector *rtiGo.Connector
     muWriters sync.Mutex
     muReaders sync.Mutex
-	numWriters int
-	numReaders int 
 }
 
 // Init initializes the RTI module.
-func (r *RTIModule) Init(configFilePath, configName string, numGoroutinesWriters int, numGoroutinesReaders int) {
+func (r *RTIModule) Init(configFilePath, configName string) {
     var err error
-    r.connector, err = rtiGo.NewConnector(configName, configFilePath)
-	
-	r.numWriters = numGoroutinesWriters
-	r.numReaders = numGoroutinesReaders
+    r.readerConnector, err = rtiGo.NewConnector(configName, configFilePath)
 	
     if err != nil {
+        log.Fatalf("Failed to create RTI Connector: %v", err)
+    }
+	
+	r.writerConnector, err = rtiGo.NewConnector(configName, configFilePath)
+	
+	if err != nil {
         log.Fatalf("Failed to create RTI Connector: %v", err)
     }
 }
@@ -37,15 +39,15 @@ func (r *RTIModule) Init(configFilePath, configName string, numGoroutinesWriters
 func (r *RTIModule) GetRealTimeData() string {
     r.muReaders.Lock()
 	defer r.muReaders.Unlock()
-    if r.connector == nil {
+    if r.readerConnector == nil {
 	return "RTI Connector not initialized"
     }
 
-    input, _ := r.connector.GetInput("MySubscriber::MyReader")
+    input, _ := r.readerConnector.GetInput("MySubscriber::MyReader")
     if input == nil {
 	return "Failed to get input"
     }
-    r.connector.Wait(3000)
+    r.readerConnector.Wait(3000)
     input.Take()
     numOfSamples, _ := input.Samples.GetLength()
     for i := 0; i<numOfSamples; i++ {
@@ -66,11 +68,11 @@ func (r *RTIModule) GetRealTimeData() string {
 func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) []byte {
     r.muReaders.Lock()
 	defer r.muReaders.Unlock()
-	if r.connector == nil {
+	if r.readerConnector == nil {
 	    return []byte("RTI Connector not initialized")
 	}
 	
-    	input, _ := r.connector.GetInput("MySubscriber::MyReader")
+    	input, _ := r.readerConnector.GetInput("MySubscriber::MyReader")
 	if input == nil {
 	    return []byte("Failed to get input")
 	}
@@ -78,7 +80,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 	var data []byte
 	var receivedByte byte
 	var err error
-	r.connector.Wait(3000)
+	r.readerConnector.Wait(3000)
 	input.Take()
 	numOfSamples, _ := input.Samples.GetLength()
 	for i := 0; i < numOfSamples; i++ {
@@ -106,11 +108,11 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 func (r *RTIModule) WriteRealTimeData(jsonData string) string {
     r.muWriters.Lock()
 	defer r.muWriters.Unlock()
-    if r.connector == nil {
+    if r.writerConnector == nil {
         return "RTI Connector not initialized"
     }
 
-    output, _ := r.connector.GetOutput("MyPublisher::MyWriter")
+    output, _ := r.writerConnector.GetOutput("MyPublisher::MyWriter")
     if output == nil {
         return "Failed to get output"
     }
@@ -135,11 +137,11 @@ func (r *RTIModule) WriteRealTimeData(jsonData string) string {
 func (r *RTIModule) WriteRealTimeDataByRate(jsonData string, rate int, size int) string {
     r.muWriters.Lock()
 	defer r.muWriters.Unlock()
-    if r.connector == nil {
+    if r.writerConnector == nil {
         return "RTI Connector not initialized"
     }
 
-    output, _ := r.connector.GetOutput("MyPublisher::MyWriter")
+    output, _ := r.writerConnector.GetOutput("MyPublisher::MyWriter")
     if output == nil {
         return "Failed to get output"
     }
@@ -193,9 +195,7 @@ func (r *RTIModule) XGetRealTimeFracturedData(call goja.FunctionCall) goja.Value
 func (r *RTIModule) XInit(call goja.FunctionCall) goja.Value {
     configFilePath := call.Argument(0).String()
     configName := call.Argument(1).String()
-    numGoroutinesWriters := call.Argument(2).ToInteger()
-    numGoroutinesReaders := call.Argument(3).ToInteger()
-    r.Init(configFilePath, configName, int(numGoroutinesWriters), int(numGoroutinesReaders))
+    r.Init(configFilePath, configName)
     return nil
 }
 
