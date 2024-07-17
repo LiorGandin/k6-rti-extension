@@ -13,7 +13,6 @@ import (
 
 // RTIModule is the main structure for the RTI module.
 type RTIModule struct {
-    readerConnector *rtiGo.Connector
     writerConnector *rtiGo.Connector
     muWriters sync.Mutex
     muReaders sync.Mutex
@@ -22,11 +21,6 @@ type RTIModule struct {
 // Init initializes the RTI module.
 func (r *RTIModule) Init(configFilePath, configName string) {
     var err error
-    r.readerConnector, err = rtiGo.NewConnector(configName, configFilePath)
-	
-    if err != nil {
-        log.Fatalf("Failed to create RTI Connector: %v", err)
-    }
 	
     r.writerConnector, err = rtiGo.NewConnector(configName, configFilePath)
 	
@@ -40,15 +34,15 @@ func (r *RTIModule) GetRealTimeData() string {
     r.muReaders.Lock()
     defer r.muReaders.Unlock()
 
-    if r.readerConnector == nil {
+    if r.writerConnector == nil {
 	return "RTI Connector not initialized"
     }
 
-    input, _ := r.readerConnector.GetInput("MySubscriber::MyReader")
+    input, _ := r.writerConnector.GetInput("MySubscriber::MyReader")
     if input == nil {
 	return "Failed to get input"
     }
-    r.readerConnector.Wait(3000)
+    r.writerConnector.Wait(3000)
     input.Take()
     numOfSamples, _ := input.Samples.GetLength()
     for i := 0; i<numOfSamples; i++ {
@@ -69,11 +63,11 @@ func (r *RTIModule) GetRealTimeData() string {
 func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrReliable bool) []byte {
         r.muReaders.Lock()
 	defer r.muReaders.Unlock()
-	if r.readerConnector == nil {
+	if r.writerConnector == nil {
 	    return []byte("RTI Connector not initialized")
 	}
 	
-    	input, _ := r.readerConnector.GetInput("MySubscriber::MyReader")
+    	input, _ := r.writerConnector.GetInput("MySubscriber::MyReader")
 	if input == nil {
 	    return []byte("Failed to get input")
 	}
@@ -81,7 +75,7 @@ func (r *RTIModule) GetRealTimeFracturedData(messageLength int, isDurableOrRelia
 	var data []byte
 	var receivedByte byte
 	var err error
-	r.readerConnector.Wait(3000)
+	r.writerConnector.Wait(3000)
 	input.Take()
 	numOfSamples, _ := input.Samples.GetLength()
 	for i := 0; i < numOfSamples; i++ {
