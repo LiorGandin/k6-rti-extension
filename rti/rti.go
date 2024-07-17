@@ -1,3 +1,5 @@
+//Written by Lior Gandin and Bailey Hayes
+
 package rti
 
 import (
